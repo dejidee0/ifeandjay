@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-v2.png",
+        url: "/og-v3.png",
         width: 1792,
         height: 939,
         alt: "Ifedayo and Joyce traditional wedding invitation",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ifedayo & Joyce · Traditional Wedding",
     description: "Connection established. Join us in November 2026.",
-    images: ["/og-v2.png"],
+    images: ["/og-v3.png"],
   },
   icons: {
     icon: "/favicon.svg",

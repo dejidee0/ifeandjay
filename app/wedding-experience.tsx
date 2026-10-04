@@ -325,7 +325,7 @@ export default function WeddingExperience() {
             ))}
           </div>
           <figure className="story-image" data-reveal>
-            <Image src="/couple-story.png" alt="Ifedayo and Joyce sharing an affectionate look in jewel-teal traditional attire against black" fill sizes="(max-width: 900px) 100vw, 42vw" />
+            <Image src="/couple-story-natural.png" alt="Ifedayo and Joyce sharing an affectionate look in jewel-teal traditional attire against black" fill sizes="(max-width: 900px) 100vw, 42vw" />
             <figcaption><code>merge: two lives → one future</code><span>Built with grace. Rooted in love.</span></figcaption>
           </figure>
         </div>
@@ -388,8 +388,8 @@ export default function WeddingExperience() {
           <TabsContent value="pre">
             <div className="gallery-grid">
               <figure className="gallery-wide"><Image src="/couple-hero.png" alt="Ifedayo and Joyce together in jewel-teal traditional attire against black" fill sizes="(max-width: 800px) 100vw, 52vw" /><figcaption><span>01</span>Before forever</figcaption></figure>
-              <figure className="gallery-tall"><Image src="/couple-story.png" alt="Ifedayo and Joyce sharing an affectionate portrait" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>02</span>Held in grace</figcaption></figure>
-              <figure className="gallery-tall"><Image src="/couple-gallery.png" alt="Formal seated portrait of Ifedayo and Joyce" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>03</span>Our colour, our joy</figcaption></figure>
+              <figure className="gallery-tall"><Image src="/couple-story-natural.png" alt="Ifedayo and Joyce sharing an affectionate portrait" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>02</span>Held in grace</figcaption></figure>
+              <figure className="gallery-tall"><Image src="/couple-gallery-natural.png" alt="Formal seated portrait of Ifedayo and Joyce" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>03</span>Our colour, our joy</figcaption></figure>
             </div>
           </TabsContent>
           <TabsContent value="family"><div className="future-album"><Users /><p>Family portraits will be added here after both families have selected and approved them.</p><code>album.status = "awaiting moments"</code></div></TabsContent>
@@ -443,10 +443,10 @@ export default function WeddingExperience() {
       <section className="invitation section" id="invitation">
         <SectionHeading index="08" eyebrow="DIGITAL INVITATION / SHARE THE DATE" title="Carry the invitation with you." />
         <div className="invite-shell" data-reveal>
-          <div className="invite-image"><Image src="/og-v2.png" alt="Ifedayo and Joyce traditional wedding invitation card in teal, wine and gold" fill sizes="(max-width: 900px) 100vw, 68vw" /></div>
+          <div className="invite-image"><Image src="/og-v3.png" alt="Ifedayo and Joyce traditional wedding invitation card in teal, wine and gold" fill sizes="(max-width: 900px) 100vw, 68vw" /></div>
           <div className="invite-actions">
             <Button size="lg" onClick={shareInvitation}><Share2 /> Share invitation</Button>
-            <Button size="lg" variant="outline" asChild><a href="/og-v2.png" download="Ifedayo-and-Joyce-Invitation.png"><Download /> Download card</a></Button>
+            <Button size="lg" variant="outline" asChild><a href="/og-v3.png" download="Ifedayo-and-Joyce-Invitation.png"><Download /> Download card</a></Button>
           </div>
         </div>
       </section>

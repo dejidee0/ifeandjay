@@ -231,7 +231,7 @@ img { object-fit: cover; }
 
 .rsvp { background: linear-gradient(135deg, #004f63 0%, #5d172f 58%, #2b121b 100%); }
 .rsvp-panel { max-width: 80rem; margin: auto; display: grid; grid-template-columns: .8fr 1.2fr; background: #151313; box-shadow: 0 35px 100px rgba(0,0,0,.28); }
-.rsvp-copy { padding: clamp(2rem, 5vw, 5rem); background: linear-gradient(rgba(10,9,9,.25), rgba(10,9,9,.25)), url('/couple-story.png') center/cover; position: relative; }
+.rsvp-copy { padding: clamp(2rem, 5vw, 5rem); background: linear-gradient(rgba(10,9,9,.25), rgba(10,9,9,.25)), url('/couple-story-natural.png') center/cover; position: relative; }
 .rsvp-copy::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(12,10,10,.96), rgba(12,10,10,.38)); }
 .rsvp-copy > * { position: relative; z-index: 1; }
 .rsvp-copy h2 { margin: 7rem 0 1rem; font: 400 clamp(2.5rem, 5vw, 4.8rem)/1 Georgia, serif; }

@@ -292,7 +292,7 @@ export default function WeddingExperience() {
       </header>
 
       <section className="hero" id="top">
-        <Image className="hero-image" src="/couple-hero.png" alt="Ifedayo and Joyce in jewel-teal traditional attire walking together through a candlelit celebration" fill priority sizes="100vw" />
+        <Image className="hero-image" src="/couple-hero.png" alt="Ifedayo and Joyce in jewel-teal traditional attire against a black studio backdrop" fill priority sizes="100vw" />
         <div className="hero-shade" />
         <div className="hero-grid" aria-hidden="true" />
         <div className="hero-content">
@@ -325,7 +325,7 @@ export default function WeddingExperience() {
             ))}
           </div>
           <figure className="story-image" data-reveal>
-            <Image src="/couple-story.png" alt="Ifedayo and Joyce sharing an affectionate look in jewel-teal traditional attire" fill sizes="(max-width: 900px) 100vw, 42vw" />
+            <Image src="/couple-story.png" alt="Ifedayo and Joyce sharing an affectionate look in jewel-teal traditional attire against black" fill sizes="(max-width: 900px) 100vw, 42vw" />
             <figcaption><code>merge: two lives → one future</code><span>Built with grace. Rooted in love.</span></figcaption>
           </figure>
         </div>
@@ -387,7 +387,7 @@ export default function WeddingExperience() {
           </TabsList>
           <TabsContent value="pre">
             <div className="gallery-grid">
-              <figure className="gallery-wide"><Image src="/couple-hero.png" alt="Ifedayo and Joyce walking together in jewel-teal traditional attire" fill sizes="(max-width: 800px) 100vw, 52vw" /><figcaption><span>01</span>Before forever</figcaption></figure>
+              <figure className="gallery-wide"><Image src="/couple-hero.png" alt="Ifedayo and Joyce together in jewel-teal traditional attire against black" fill sizes="(max-width: 800px) 100vw, 52vw" /><figcaption><span>01</span>Before forever</figcaption></figure>
               <figure className="gallery-tall"><Image src="/couple-story.png" alt="Ifedayo and Joyce sharing an affectionate portrait" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>02</span>Held in grace</figcaption></figure>
               <figure className="gallery-tall"><Image src="/couple-gallery.png" alt="Formal seated portrait of Ifedayo and Joyce" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>03</span>Our colour, our joy</figcaption></figure>
             </div>

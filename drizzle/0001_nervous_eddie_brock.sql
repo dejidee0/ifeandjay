@@ -1,0 +1,1 @@
+CREATE INDEX `idx_guest_messages_status_created_at` ON `guest_messages` (`status`,`created_at`);

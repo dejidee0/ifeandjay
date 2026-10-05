@@ -1,0 +1,15 @@
+# Secrets are configured in Vercel Project Settings, never uploaded as files.
+.env
+.env.*
+!.env.example
+
+# Local-only state and caches.
+.git
+.sites-runtime
+.agents
+.codex
+.next
+node_modules
+coverage
+outputs
+work

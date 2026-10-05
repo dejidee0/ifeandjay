@@ -1,4 +1,5 @@
 import { isRateLimited, readSmallJson } from "@/lib/api-security";
+import { invitationFromRequest } from "@/lib/invitation-session";
 import { saveRsvp, type Attendance } from "@/lib/wedding-store";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +9,11 @@ const clean = (value: unknown, max: number) =>
 
 export async function POST(request: Request) {
   try {
+    const invitation = await invitationFromRequest(request);
+    if (!invitation) {
+      return Response.json({ error: "A valid private invitation is required." }, { status: 401 });
+    }
+
     if (isRateLimited(request, "rsvp", 8, 10 * 60 * 1000)) {
       return Response.json({ error: "Too many attempts. Please wait a few minutes and try again." }, { status: 429 });
     }
@@ -18,10 +24,10 @@ export async function POST(request: Request) {
       return Response.json({ ok: true, confirmationCode: "RECEIVED" }, { status: 201 });
     }
 
-    const guestName = clean(payload.guestName, 80);
+    const guestName = invitation.guestName;
     const contact = clean(payload.contact, 120);
     const attendance = clean(payload.attendance, 12);
-    const guestCount = Math.max(1, Math.min(6, Number(payload.guestCount) || 1));
+    const guestCount = Math.max(1, Math.min(invitation.maxGuests, Number(payload.guestCount) || 1));
 
     if (guestName.length < 2 || contact.length < 5) {
       return Response.json({ error: "Please add your name and a valid contact." }, { status: 400 });
@@ -36,6 +42,7 @@ export async function POST(request: Request) {
       contact,
       attendance: attendance as Attendance,
       guestCount: attendance === "yes" ? guestCount : 1,
+      inviteCode: invitation.code,
     });
 
     return Response.json(

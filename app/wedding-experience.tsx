@@ -37,6 +37,12 @@ type GiftDetails = {
   accountName: string;
 };
 
+type InvitationAccess = {
+  code: string;
+  guestName: string;
+  maxGuests: number;
+};
+
 type ToolContext = {
   registerTool: (
     tool: {
@@ -124,7 +130,7 @@ function SectionHeading({ index, eyebrow, title, intro }: { index: string; eyebr
   );
 }
 
-export default function WeddingExperience() {
+export default function WeddingExperience({ invitation }: { invitation: InvitationAccess }) {
   const [attendance, setAttendance] = useState("yes");
   const [rsvpState, setRsvpState] = useState<{ mode: "idle" | "sending" | "success" | "error"; message: string }>({ mode: "idle", message: "" });
   const [messageState, setMessageState] = useState("");
@@ -290,6 +296,11 @@ export default function WeddingExperience() {
     window.setTimeout(() => setGiftStatus(""), 3500);
   }
 
+  async function lockInvitation() {
+    await fetch("/api/invitations/verify", { method: "DELETE" }).catch(() => undefined);
+    window.location.replace("/");
+  }
+
   return (
     <main>
       <a className="skip-link" href="#story">Skip to our story</a>
@@ -309,6 +320,11 @@ export default function WeddingExperience() {
         <div className="hero-shade" />
         <div className="hero-grid" aria-hidden="true" />
         <div className="hero-content">
+          <div className="verified-guest-pass">
+            <div><span>PRIVATE INVITATION FOR</span><strong>{invitation.guestName}</strong></div>
+            <p>ADMIT {invitation.maxGuests}</p>
+            <button type="button" onClick={lockInvitation}>Not you? Lock</button>
+          </div>
           <div className="connection-pill"><span /> Connection established <code>200 OK</code></div>
           <p className="hero-kicker">{config.event.title} · {config.event.month}</p>
           <h1><span>{config.couple.displayGroom}</span><em>&</em><span>{config.couple.displayBride}</span></h1>
@@ -393,19 +409,11 @@ export default function WeddingExperience() {
       </section>
 
       <section className="gallery section" id="gallery">
-        <SectionHeading index="05" eyebrow="GALLERY / MEMORY ARCHIVE" title="Moments, held close." intro="A living archive for every chapter—from the photographs that begin the story to the memories still waiting to be made." />
-        <Tabs defaultValue="pre" className="gallery-tabs" data-reveal>
+        <SectionHeading index="05" eyebrow="GALLERY / MEMORY ARCHIVE" title="Moments, held close." intro="Our engagement chapter, held in photographs—alongside the family and wedding memories still waiting to be made." />
+        <Tabs defaultValue="engagement" className="gallery-tabs" data-reveal>
           <TabsList variant="line" aria-label="Gallery categories">
-            <TabsTrigger value="pre">Pre-wedding</TabsTrigger><TabsTrigger value="family">Family</TabsTrigger><TabsTrigger value="engagement">Engagement</TabsTrigger><TabsTrigger value="wedding">Wedding memories</TabsTrigger>
+            <TabsTrigger value="engagement">Engagement</TabsTrigger><TabsTrigger value="family">Family</TabsTrigger><TabsTrigger value="wedding">Wedding memories</TabsTrigger>
           </TabsList>
-          <TabsContent value="pre">
-            <div className="gallery-grid">
-              <figure className="gallery-wide"><Image src="/couple-hero.png" alt="Ifedayo and Joyce together in jewel-teal traditional attire against black" fill sizes="(max-width: 800px) 100vw, 52vw" /><figcaption><span>01</span>Before forever</figcaption></figure>
-              <figure className="gallery-tall"><Image src="/couple-story-natural.png" alt="Ifedayo and Joyce sharing an affectionate portrait" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>02</span>Held in grace</figcaption></figure>
-              <figure className="gallery-tall"><Image src="/couple-gallery-natural.png" alt="Formal seated portrait of Ifedayo and Joyce" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>03</span>Our colour, our joy</figcaption></figure>
-            </div>
-          </TabsContent>
-          <TabsContent value="family"><div className="future-album"><Users /><p>Family portraits will be added here after both families have selected and approved them.</p><code>album.status = &quot;awaiting moments&quot;</code></div></TabsContent>
           <TabsContent value="engagement">
             <div className="gallery-grid engagement-gallery">
               <figure><Image src="/engagement-01-v1.webp" alt="Ifedayo and Joyce celebrating their engagement beneath balloons and gold proposal letters" fill sizes="(max-width: 800px) 100vw, 33vw" /><figcaption><span>01</span>The beautiful yes</figcaption></figure>
@@ -413,6 +421,7 @@ export default function WeddingExperience() {
               <figure><Image src="/engagement-03-v1.webp" alt="Ifedayo and Joyce embracing in front of their proposal decorations" fill sizes="(max-width: 800px) 100vw, 33vw" /><figcaption><span>03</span>Forever began here</figcaption></figure>
             </div>
           </TabsContent>
+          <TabsContent value="family"><div className="future-album"><Users /><p>Family portraits will be added here after both families have selected and approved them.</p><code>album.status = &quot;awaiting moments&quot;</code></div></TabsContent>
           <TabsContent value="wedding"><div className="future-album"><CalendarDays /><p>After the celebration, this space will become a shared archive of joy.</p><code>album.status = &quot;future memory&quot;</code></div></TabsContent>
         </Tabs>
       </section>
@@ -429,12 +438,12 @@ export default function WeddingExperience() {
             <div className="confirmation" role="status"><span><Check /></span><p>RSVP RECEIVED</p><h3>Connection confirmed.</h3><p>Thank you. Please keep this reference:</p><code>{rsvpState.message}</code><Button variant="outline" onClick={() => setRsvpState({ mode: "idle", message: "" })}>Submit another response</Button></div>
           ) : (
             <form onSubmit={submitRsvp} className="rsvp-form">
-              <div className="field"><label htmlFor="guest-name">Guest name</label><Input id="guest-name" name="guestName" required minLength={2} placeholder="Your full name" /></div>
+              <div className="field"><label htmlFor="guest-name">Invited guest</label><Input id="guest-name" name="guestName" value={invitation.guestName} readOnly aria-readonly="true" /></div>
               <div className="field"><label htmlFor="guest-contact">Phone or email</label><Input id="guest-contact" name="contact" required minLength={5} placeholder="How the family can reach you" /></div>
               <fieldset><legend>Will you attend?</legend><RadioGroup value={attendance} onValueChange={setAttendance} className="attendance-options">
                 {[['yes', 'Joyfully attending'], ['maybe', 'Not sure yet'], ['no', 'Celebrating from afar']].map(([value, label]) => <label key={value}><RadioGroupItem value={value} />{label}</label>)}
               </RadioGroup></fieldset>
-              <div className="field"><label htmlFor="guest-count">Number of guests</label><Input id="guest-count" name="guestCount" type="number" inputMode="numeric" min={1} max={6} defaultValue={1} disabled={attendance !== "yes"} /></div>
+              <div className="field"><label htmlFor="guest-count">Number attending · maximum {invitation.maxGuests}</label><Input id="guest-count" name="guestCount" type="number" inputMode="numeric" min={1} max={invitation.maxGuests} defaultValue={1} disabled={attendance !== "yes"} /></div>
               <div className="honeypot" aria-hidden="true"><label htmlFor="website">Website</label><input id="website" name="website" tabIndex={-1} autoComplete="off" /></div>
               <Button type="submit" size="lg" disabled={rsvpState.mode === "sending"}>{rsvpState.mode === "sending" ? "Saving…" : "Confirm response"}<Send /></Button>
               <p className={rsvpState.mode === "error" ? "form-error" : "form-note"} aria-live="polite">{rsvpState.message || config.rsvpDeadline}</p>
@@ -450,7 +459,7 @@ export default function WeddingExperience() {
             {messages.length ? messages.map((item) => <blockquote key={item.id}><p>“{item.message}”</p><footer>— {item.guestName}</footer></blockquote>) : <div className="first-message"><Heart /><h3>Be among the first.</h3><p>Approved guest messages will gather here like notes in a keepsake.</p></div>}
           </div>
           <form className="message-form" onSubmit={submitMessage} data-reveal>
-            <div className="field"><label htmlFor="message-name">Your name</label><Input id="message-name" name="guestName" required minLength={2} placeholder="Name" /></div>
+            <div className="field"><label htmlFor="message-name">Invited guest</label><Input id="message-name" name="guestName" value={invitation.guestName} readOnly aria-readonly="true" /></div>
             <div className="field"><label htmlFor="message-text">Your message</label><Textarea id="message-text" name="message" required minLength={3} maxLength={280} placeholder="Write your congratulations…" /></div>
             <div className="honeypot" aria-hidden="true"><label htmlFor="message-website">Website</label><input id="message-website" name="website" tabIndex={-1} autoComplete="off" /></div>
             <Button type="submit" disabled={messageSending}>{messageSending ? "Sending…" : "Send to the couple"} <Heart /></Button>

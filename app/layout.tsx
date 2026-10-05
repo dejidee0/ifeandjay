@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ifedayo-and-joyce.smart-ring-6040.chatgpt.site"),
+  metadataBase: new URL("https://ifeandjay.vercel.app"),
   title: "Ifedayo & Joyce · Traditional Wedding",
   description:
     "Celebrate the traditional wedding of Adedeji Ifedayo Micheal and Joyce Passion Akora in November 2026.",

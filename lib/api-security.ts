@@ -38,3 +38,9 @@ export function secureCompare(left: string, right: string) {
   }
   return difference === 0;
 }
+
+export function isAdminAuthorized(request: Request) {
+  const adminKey = process.env.ADMIN_KEY?.trim();
+  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  return Boolean(adminKey && supplied && secureCompare(supplied, adminKey));
+}

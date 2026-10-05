@@ -9,9 +9,11 @@ import {
 const ACCESS = "private" as const;
 const RSVP_PREFIX = "wedding/rsvps/";
 const MESSAGE_PREFIX = "wedding/messages/";
+const INVITATION_PREFIX = "wedding/invitations/";
 
 export type Attendance = "yes" | "no" | "maybe";
 export type MessageStatus = "approved" | "hidden" | "pending";
+export type InvitationStatus = "active" | "revoked";
 
 export type RsvpRecord = {
   id: string;
@@ -19,6 +21,7 @@ export type RsvpRecord = {
   contact: string;
   attendance: Attendance;
   guestCount: number;
+  inviteCode: string;
   confirmationCode: string;
   createdAt: string;
 };
@@ -27,7 +30,17 @@ export type GuestMessageRecord = {
   id: string;
   guestName: string;
   message: string;
+  inviteCode: string;
   status: MessageStatus;
+  createdAt: string;
+};
+
+export type InvitationRecord = {
+  id: string;
+  code: string;
+  guestName: string;
+  maxGuests: number;
+  status: InvitationStatus;
   createdAt: string;
 };
 
@@ -42,6 +55,26 @@ function messagePath(id: string) {
     throw new Error("Invalid message id.");
   }
   return `${MESSAGE_PREFIX}${id}.json`;
+}
+
+function normalizeInviteCode(code: string) {
+  return code.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "");
+}
+
+function invitationPath(code: string) {
+  const normalized = normalizeInviteCode(code);
+  if (!/^IJ-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(normalized)) {
+    throw new Error("Invalid invitation code.");
+  }
+  return `${INVITATION_PREFIX}${normalized}.json`;
+}
+
+function randomInviteCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const value = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+  return `IJ-${value.slice(0, 4)}-${value.slice(4)}`;
 }
 
 async function readJson<T>(pathname: string, useCache = false): Promise<{ value: T; etag: string } | null> {
@@ -101,7 +134,7 @@ export async function saveRsvp(input: Omit<RsvpRecord, "id" | "confirmationCode"
   return record;
 }
 
-export async function saveGuestMessage(input: Pick<GuestMessageRecord, "guestName" | "message">) {
+export async function saveGuestMessage(input: Pick<GuestMessageRecord, "guestName" | "message" | "inviteCode">) {
   assertConfigured();
   const id = `msg_${crypto.randomUUID()}`;
   const record: GuestMessageRecord = {
@@ -118,6 +151,70 @@ export async function saveGuestMessage(input: Pick<GuestMessageRecord, "guestNam
   });
 
   return record;
+}
+
+export async function getInvitationByCode(code: string) {
+  try {
+    return (await readJson<InvitationRecord>(invitationPath(code), false))?.value ?? null;
+  } catch (error) {
+    if (error instanceof Error && error.message === "Invalid invitation code.") return null;
+    throw error;
+  }
+}
+
+export async function createInvitation(input: { guestName: string; maxGuests: number }) {
+  assertConfigured();
+
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const code = randomInviteCode();
+    if (await getInvitationByCode(code)) continue;
+
+    const record: InvitationRecord = {
+      id: `invite_${crypto.randomUUID()}`,
+      code,
+      guestName: input.guestName,
+      maxGuests: Math.max(1, Math.min(6, Math.floor(input.maxGuests))),
+      status: "active",
+      createdAt: new Date().toISOString(),
+    };
+    await put(invitationPath(code), JSON.stringify(record), {
+      access: ACCESS,
+      contentType: "application/json",
+      addRandomSuffix: false,
+    });
+    return record;
+  }
+
+  throw new Error("Could not generate a unique invitation code.");
+}
+
+export async function listInvitations(limit = 500) {
+  const records = await readRecords<InvitationRecord>(INVITATION_PREFIX, limit);
+  return records.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
+export async function updateInvitationStatus(code: string, status: InvitationStatus) {
+  const pathname = invitationPath(code);
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const current = await readJson<InvitationRecord>(pathname, false);
+    if (!current) return null;
+
+    const updated: InvitationRecord = { ...current.value, status };
+    try {
+      await put(pathname, JSON.stringify(updated), {
+        access: ACCESS,
+        contentType: "application/json",
+        allowOverwrite: true,
+        ifMatch: current.etag,
+      });
+      return updated;
+    } catch (error) {
+      if (!(error instanceof BlobPreconditionFailedError) || attempt === 1) throw error;
+    }
+  }
+
+  return null;
 }
 
 export async function listGuestMessages(options: { approvedOnly?: boolean; limit?: number } = {}) {

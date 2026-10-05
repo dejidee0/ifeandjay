@@ -1,4 +1,4 @@
-import { readSmallJson, secureCompare } from "@/lib/api-security";
+import { isAdminAuthorized, readSmallJson } from "@/lib/api-security";
 import {
   listGuestMessages,
   updateGuestMessageStatus,
@@ -7,14 +7,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-async function authorized(request: Request) {
-  const adminKey = process.env.ADMIN_KEY?.trim();
-  const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  return Boolean(adminKey && supplied && secureCompare(supplied, adminKey));
-}
-
 export async function GET(request: Request) {
-  if (!(await authorized(request))) {
+  if (!isAdminAuthorized(request)) {
     return Response.json({ error: "Not authorized" }, { status: 401 });
   }
 
@@ -28,7 +22,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (!(await authorized(request))) {
+  if (!isAdminAuthorized(request)) {
     return Response.json({ error: "Not authorized" }, { status: 401 });
   }
 

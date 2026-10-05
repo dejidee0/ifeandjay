@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { weddingConfig as config } from "@/lib/wedding-config";
 
 type GuestMessage = {
-  id: number;
+  id: string;
   guestName: string;
   message: string;
   createdAt: string;
@@ -128,6 +128,7 @@ export default function WeddingExperience() {
   const [attendance, setAttendance] = useState("yes");
   const [rsvpState, setRsvpState] = useState<{ mode: "idle" | "sending" | "success" | "error"; message: string }>({ mode: "idle", message: "" });
   const [messageState, setMessageState] = useState("");
+  const [messageSending, setMessageSending] = useState(false);
   const [messages, setMessages] = useState<GuestMessage[]>([]);
   const [giftDetails, setGiftDetails] = useState<GiftDetails | null>(null);
   const [giftStatus, setGiftStatus] = useState("");
@@ -203,47 +204,59 @@ export default function WeddingExperience() {
   async function submitRsvp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setRsvpState({ mode: "sending", message: "Saving your response…" });
-    const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/rsvp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        guestName: form.get("guestName"),
-        contact: form.get("contact"),
-        guestCount: Number(form.get("guestCount")),
-        website: form.get("website"),
-        attendance,
-      }),
-    });
-    const data = (await response.json()) as { confirmationCode?: string; error?: string };
-    if (!response.ok) {
-      setRsvpState({ mode: "error", message: data.error ?? "Please try again." });
-      return;
+    try {
+      const form = new FormData(event.currentTarget);
+      const response = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guestName: form.get("guestName"),
+          contact: form.get("contact"),
+          guestCount: Number(form.get("guestCount")),
+          website: form.get("website"),
+          attendance,
+        }),
+      });
+      const data = (await response.json()) as { confirmationCode?: string; error?: string };
+      if (!response.ok) {
+        setRsvpState({ mode: "error", message: data.error ?? "Please try again." });
+        return;
+      }
+      setRsvpState({ mode: "success", message: data.confirmationCode ?? "Confirmed" });
+    } catch {
+      setRsvpState({ mode: "error", message: "The connection was interrupted. Please try again." });
     }
-    setRsvpState({ mode: "success", message: data.confirmationCode ?? "Confirmed" });
   }
 
   async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (messageSending) return;
+    setMessageSending(true);
     setMessageState("Sending…");
     const form = event.currentTarget;
     const fields = new FormData(form);
-    const response = await fetch("/api/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        guestName: fields.get("guestName"),
-        message: fields.get("message"),
-        website: fields.get("website"),
-      }),
-    });
-    const data = (await response.json()) as { error?: string };
-    if (!response.ok) {
-      setMessageState(data.error ?? "Please try again.");
-      return;
+    try {
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guestName: fields.get("guestName"),
+          message: fields.get("message"),
+          website: fields.get("website"),
+        }),
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessageState(data.error ?? "Please try again.");
+        return;
+      }
+      form.reset();
+      setMessageState("Received with love. Your message will appear after family approval.");
+    } catch {
+      setMessageState("The connection was interrupted. Please try again.");
+    } finally {
+      setMessageSending(false);
     }
-    form.reset();
-    setMessageState("Received with love. Your message will appear after family approval.");
   }
 
   function runCommand(raw: string) {
@@ -392,9 +405,15 @@ export default function WeddingExperience() {
               <figure className="gallery-tall"><Image src="/couple-gallery-natural.png" alt="Formal seated portrait of Ifedayo and Joyce" fill sizes="(max-width: 800px) 100vw, 24vw" /><figcaption><span>03</span>Our colour, our joy</figcaption></figure>
             </div>
           </TabsContent>
-          <TabsContent value="family"><div className="future-album"><Users /><p>Family portraits will be added here after both families have selected and approved them.</p><code>album.status = "awaiting moments"</code></div></TabsContent>
-          <TabsContent value="engagement"><div className="future-album"><Heart /><p>This chapter is reserved for the photographs that tell the engagement story.</p><code>album.status = "coming soon"</code></div></TabsContent>
-          <TabsContent value="wedding"><div className="future-album"><CalendarDays /><p>After the celebration, this space will become a shared archive of joy.</p><code>album.status = "future memory"</code></div></TabsContent>
+          <TabsContent value="family"><div className="future-album"><Users /><p>Family portraits will be added here after both families have selected and approved them.</p><code>album.status = &quot;awaiting moments&quot;</code></div></TabsContent>
+          <TabsContent value="engagement">
+            <div className="gallery-grid engagement-gallery">
+              <figure><Image src="/engagement-01-v1.webp" alt="Ifedayo and Joyce celebrating their engagement beneath balloons and gold proposal letters" fill sizes="(max-width: 800px) 100vw, 33vw" /><figcaption><span>01</span>The beautiful yes</figcaption></figure>
+              <figure><Image src="/engagement-02-v1.webp" alt="Ifedayo and Joyce holding hands during their engagement celebration" fill sizes="(max-width: 800px) 100vw, 33vw" /><figcaption><span>02</span>A promise held</figcaption></figure>
+              <figure><Image src="/engagement-03-v1.webp" alt="Ifedayo and Joyce embracing in front of their proposal decorations" fill sizes="(max-width: 800px) 100vw, 33vw" /><figcaption><span>03</span>Forever began here</figcaption></figure>
+            </div>
+          </TabsContent>
+          <TabsContent value="wedding"><div className="future-album"><CalendarDays /><p>After the celebration, this space will become a shared archive of joy.</p><code>album.status = &quot;future memory&quot;</code></div></TabsContent>
         </Tabs>
       </section>
 
@@ -434,7 +453,7 @@ export default function WeddingExperience() {
             <div className="field"><label htmlFor="message-name">Your name</label><Input id="message-name" name="guestName" required minLength={2} placeholder="Name" /></div>
             <div className="field"><label htmlFor="message-text">Your message</label><Textarea id="message-text" name="message" required minLength={3} maxLength={280} placeholder="Write your congratulations…" /></div>
             <div className="honeypot" aria-hidden="true"><label htmlFor="message-website">Website</label><input id="message-website" name="website" tabIndex={-1} autoComplete="off" /></div>
-            <Button type="submit">Send to the couple <Heart /></Button>
+            <Button type="submit" disabled={messageSending}>{messageSending ? "Sending…" : "Send to the couple"} <Heart /></Button>
             <p className="form-note" aria-live="polite">{messageState || "280 characters maximum · family moderated"}</p>
           </form>
         </div>

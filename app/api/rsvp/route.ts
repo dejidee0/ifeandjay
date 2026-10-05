@@ -1,12 +1,18 @@
-import { getDb } from "@/db";
-import { rsvps } from "@/db/schema";
+import { isRateLimited, readSmallJson } from "@/lib/api-security";
+import { saveRsvp, type Attendance } from "@/lib/wedding-store";
+
+export const dynamic = "force-dynamic";
 
 const clean = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().replace(/\s+/g, " ").slice(0, max) : "";
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as Record<string, unknown>;
+    if (isRateLimited(request, "rsvp", 8, 10 * 60 * 1000)) {
+      return Response.json({ error: "Too many attempts. Please wait a few minutes and try again." }, { status: 429 });
+    }
+
+    const payload = await readSmallJson(request);
 
     if (clean(payload.website, 50)) {
       return Response.json({ ok: true, confirmationCode: "RECEIVED" }, { status: 201 });
@@ -25,19 +31,22 @@ export async function POST(request: Request) {
       return Response.json({ error: "Please select an attendance response." }, { status: 400 });
     }
 
-    const confirmationCode = `IJ-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-    const db = await getDb();
-    await db.insert(rsvps).values({
+    const record = await saveRsvp({
       guestName,
       contact,
-      attendance,
+      attendance: attendance as Attendance,
       guestCount: attendance === "yes" ? guestCount : 1,
-      confirmationCode,
     });
 
-    return Response.json({ ok: true, confirmationCode }, { status: 201 });
+    return Response.json(
+      { ok: true, confirmationCode: record.confirmationCode },
+      { status: 201, headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("RSVP submission failed", error);
+    if (error instanceof SyntaxError || (error instanceof Error && error.message === "PAYLOAD_TOO_LARGE")) {
+      return Response.json({ error: "The RSVP submission was not valid." }, { status: 400 });
+    }
     return Response.json(
       { error: "We could not save your RSVP just now. Please try again." },
       { status: 503 },

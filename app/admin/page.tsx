@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type Message = {
-  id: number;
+  id: string;
   guestName: string;
   message: string;
   status: string;
@@ -21,36 +21,42 @@ export default function ModerationPage() {
 
   async function loadMessages() {
     setLoading(true);
-    const response = await fetch("/api/admin/messages", {
-      headers: { Authorization: `Bearer ${key}` },
-    });
-    const data = (await response.json()) as { messages?: Message[]; error?: string };
-    setLoading(false);
-    if (!response.ok) {
-      setStatus(data.error ?? "Could not load messages.");
-      return;
+    try {
+      const response = await fetch("/api/admin/messages", {
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      const data = (await response.json()) as { messages?: Message[]; error?: string };
+      if (!response.ok) {
+        setStatus(data.error ?? "Could not load messages.");
+        return;
+      }
+      setMessages(data.messages ?? []);
+      setStatus(`${data.messages?.length ?? 0} messages loaded.`);
+    } catch {
+      setStatus("The connection was interrupted. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setMessages(data.messages ?? []);
-    setStatus(`${data.messages?.length ?? 0} messages loaded.`);
   }
 
-  async function moderate(id: number, nextStatus: string) {
-    const response = await fetch("/api/admin/messages", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({ id, status: nextStatus }),
-    });
-    if (response.ok) {
+  async function moderate(id: string, nextStatus: string) {
+    try {
+      const response = await fetch("/api/admin/messages", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify({ id, status: nextStatus }),
+      });
+      if (!response.ok) throw new Error("Moderation failed");
       setMessages((current) =>
         current.map((message) =>
           message.id === id ? { ...message, status: nextStatus } : message,
         ),
       );
       setStatus(`Message ${id} marked ${nextStatus}.`);
-    } else {
+    } catch {
       setStatus("The moderation update did not save.");
     }
   }

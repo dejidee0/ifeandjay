@@ -1,26 +1,16 @@
-import { and, desc, eq } from "drizzle-orm";
-import { getDb } from "@/db";
-import { guestMessages } from "@/db/schema";
+import { isRateLimited, readSmallJson } from "@/lib/api-security";
+import { listGuestMessages, saveGuestMessage } from "@/lib/wedding-store";
+
+export const dynamic = "force-dynamic";
 
 const clean = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().replace(/\s+/g, " ").slice(0, max) : "";
 
 export async function GET() {
   try {
-    const db = await getDb();
-    const messages = await db
-      .select({
-        id: guestMessages.id,
-        guestName: guestMessages.guestName,
-        message: guestMessages.message,
-        createdAt: guestMessages.createdAt,
-      })
-      .from(guestMessages)
-      .where(and(eq(guestMessages.status, "approved")))
-      .orderBy(desc(guestMessages.createdAt), desc(guestMessages.id))
-      .limit(12);
+    const messages = await listGuestMessages({ approvedOnly: true, limit: 12 });
 
-    return Response.json({ messages });
+    return Response.json({ messages }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Guest messages unavailable", error);
     return Response.json({ messages: [], unavailable: true });
@@ -29,7 +19,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as Record<string, unknown>;
+    if (isRateLimited(request, "guest-message", 6, 10 * 60 * 1000)) {
+      return Response.json({ error: "Too many messages. Please wait a few minutes and try again." }, { status: 429 });
+    }
+
+    const payload = await readSmallJson(request);
 
     if (clean(payload.website, 50)) {
       return Response.json({ ok: true }, { status: 201 });
@@ -42,11 +36,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "Please add your name and a short message." }, { status: 400 });
     }
 
-    const db = await getDb();
-    await db.insert(guestMessages).values({ guestName, message, status: "pending" });
-    return Response.json({ ok: true }, { status: 201 });
+    const saved = await saveGuestMessage({ guestName, message });
+    return Response.json({ ok: true, id: saved.id }, { status: 201 });
   } catch (error) {
     console.error("Guest message submission failed", error);
+    if (error instanceof SyntaxError || (error instanceof Error && error.message === "PAYLOAD_TOO_LARGE")) {
+      return Response.json({ error: "The message submission was not valid." }, { status: 400 });
+    }
     return Response.json(
       { error: "We could not save your message just now. Please try again." },
       { status: 503 },

@@ -224,6 +224,9 @@ img { object-fit: cover; }
 .gallery-tall img { object-position: center; }
 .gallery-grid figcaption { position: absolute; z-index: 2; left: 1.5rem; right: 1.5rem; bottom: 1.3rem; display: flex; gap: 1rem; font-family: Georgia, serif; font-size: 1.25rem; }
 .gallery-grid figcaption span { color: var(--gold); font: .65rem var(--font-mono); }
+.engagement-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 42rem; }
+.engagement-gallery figure { min-height: 42rem; }
+.engagement-gallery img { object-position: center 35%; }
 .future-album { min-height: 34rem; display: grid; place-items: center; align-content: center; text-align: center; border: 1px solid rgba(242,231,215,.13); background: radial-gradient(circle at 50% 30%, rgba(116,36,61,.18), transparent 45%); padding: 2rem; }
 .future-album svg { width: 2rem; height: 2rem; color: var(--gold); stroke-width: 1; }
 .future-album p { max-width: 35rem; font: 400 clamp(1.4rem, 2.5vw, 2rem)/1.5 Georgia, serif; }
@@ -347,6 +350,7 @@ fieldset { border: 0; padding: 0; margin: 0; }
   .event-grid { grid-template-columns: 1fr 1fr; }.event-grid .event-primary { grid-column: 1 / -1; }.event-grid article:nth-child(2) { border-top: 1px solid var(--border); }.event-grid article:last-child { border-top: 1px solid var(--border); }
   .palette-card, .rsvp-panel, .gift-card { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: 1fr; }.gallery-grid .gallery-tall { min-height: 34rem; }
+  .engagement-gallery { grid-template-columns: 1fr; min-height: auto; }.engagement-gallery figure { min-height: 38rem; }
 }
 
 @media (max-width: 600px) {
@@ -372,6 +376,7 @@ fieldset { border: 0; padding: 0; margin: 0; }
   .palette-card { border: 0; }.swatches { min-height: 22rem; }.dress-notes article { padding-inline: 1rem; }.asoebi-note { grid-template-columns: 1fr; padding-inline: 1rem; }
   .gallery-tabs [data-slot="tabs-list"] { justify-content: flex-start; }.gallery-tabs [data-slot="tabs-trigger"] { padding-inline: .8rem; }
   .gallery-grid { min-height: auto; }.gallery-grid figure { min-height: 23rem; }
+  .engagement-gallery figure { min-height: 31rem; }
   .rsvp { padding-inline: .65rem; }.rsvp-copy h2 { margin-top: 4rem; }.attendance-options { grid-template-columns: 1fr; }
   .message-list { grid-template-columns: 1fr; }.first-message { grid-column: auto; }
   .invite-actions { display: grid; }.invite-actions [data-slot="button"] { width: 100%; }

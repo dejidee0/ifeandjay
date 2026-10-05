@@ -10,10 +10,12 @@ const ACCESS = "private" as const;
 const RSVP_PREFIX = "wedding/rsvps/";
 const MESSAGE_PREFIX = "wedding/messages/";
 const INVITATION_PREFIX = "wedding/invitations/";
+const INVITATION_REQUEST_PREFIX = "wedding/invitation-requests/";
 
 export type Attendance = "yes" | "no" | "maybe";
 export type MessageStatus = "approved" | "hidden" | "pending";
 export type InvitationStatus = "active" | "revoked";
+export type InvitationRequestStatus = "pending" | "approved" | "declined";
 
 export type RsvpRecord = {
   id: string;
@@ -44,6 +46,19 @@ export type InvitationRecord = {
   createdAt: string;
 };
 
+export type InvitationRequestRecord = {
+  id: string;
+  accessToken: string;
+  guestName: string;
+  email: string;
+  requestedGuests: number;
+  approvedGuests: number | null;
+  invitationCode: string | null;
+  status: InvitationRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
 function assertConfigured() {
   if (!process.env.BLOB_READ_WRITE_TOKEN && !(process.env.BLOB_STORE_ID && process.env.VERCEL_OIDC_TOKEN)) {
     throw new Error("Private Vercel Blob storage is not configured.");
@@ -67,6 +82,11 @@ function invitationPath(code: string) {
     throw new Error("Invalid invitation code.");
   }
   return `${INVITATION_PREFIX}${normalized}.json`;
+}
+
+function invitationRequestPath(id: string) {
+  if (!/^request_[a-f0-9-]{36}$/i.test(id)) throw new Error("Invalid invitation request id.");
+  return `${INVITATION_REQUEST_PREFIX}${id}.json`;
 }
 
 function randomInviteCode() {
@@ -214,6 +234,76 @@ export async function updateInvitationStatus(code: string, status: InvitationSta
     }
   }
 
+  return null;
+}
+
+export async function createInvitationRequest(input: {
+  guestName: string;
+  email: string;
+  requestedGuests: number;
+}) {
+  assertConfigured();
+  const now = new Date().toISOString();
+  const record: InvitationRequestRecord = {
+    id: `request_${crypto.randomUUID()}`,
+    accessToken: crypto.randomUUID(),
+    guestName: input.guestName,
+    email: input.email.toLowerCase(),
+    requestedGuests: Math.max(1, Math.min(6, Math.floor(input.requestedGuests))),
+    approvedGuests: null,
+    invitationCode: null,
+    status: "pending",
+    createdAt: now,
+    updatedAt: now,
+  };
+  await put(invitationRequestPath(record.id), JSON.stringify(record), {
+    access: ACCESS,
+    contentType: "application/json",
+    addRandomSuffix: false,
+  });
+  return record;
+}
+
+export async function getInvitationRequest(id: string) {
+  try {
+    return (await readJson<InvitationRequestRecord>(invitationRequestPath(id), false))?.value ?? null;
+  } catch (error) {
+    if (error instanceof Error && error.message === "Invalid invitation request id.") return null;
+    throw error;
+  }
+}
+
+export async function listInvitationRequests(limit = 500) {
+  const records = await readRecords<InvitationRequestRecord>(INVITATION_REQUEST_PREFIX, limit);
+  return records.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
+export async function updateInvitationRequest(
+  id: string,
+  update: Pick<InvitationRequestRecord, "status" | "approvedGuests" | "invitationCode">,
+) {
+  const pathname = invitationRequestPath(id);
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const current = await readJson<InvitationRequestRecord>(pathname, false);
+    if (!current) return null;
+    const updated: InvitationRequestRecord = {
+      ...current.value,
+      ...update,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      await put(pathname, JSON.stringify(updated), {
+        access: ACCESS,
+        contentType: "application/json",
+        allowOverwrite: true,
+        ifMatch: current.etag,
+      });
+      return updated;
+    } catch (error) {
+      if (!(error instanceof BlobPreconditionFailedError) || attempt === 1) throw error;
+    }
+  }
   return null;
 }
 

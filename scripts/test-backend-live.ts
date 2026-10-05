@@ -11,6 +11,7 @@ const adminInvitationsRoute = await import("../app/api/admin/invitations/route")
 const invitationRequestRoute = await import("../app/api/invitations/request/route");
 const invitationStatusRoute = await import("../app/api/invitations/status/route");
 const adminRequestsRoute = await import("../app/api/admin/invitation-requests/route");
+const adminSessionRoute = await import("../app/api/admin/session/route");
 const giftRoute = await import("../app/api/gift/route");
 
 let requestId = "";
@@ -45,6 +46,22 @@ try {
   const adminKey = process.env.ADMIN_KEY;
   assert(adminKey, "ADMIN_KEY is unavailable for the backend test.");
   const authorization = `Bearer ${adminKey}`;
+
+  const unauthorizedAdminSession = await adminSessionRoute.POST(
+    jsonRequest("http://test.local/api/admin/session", "POST", undefined, "Bearer incorrect-key"),
+  );
+  assert(unauthorizedAdminSession.status === 401, "An incorrect admin key created an admin session.");
+
+  const adminSessionResponse = await adminSessionRoute.POST(
+    jsonRequest("http://test.local/api/admin/session", "POST", undefined, authorization),
+  );
+  const adminCookie = adminSessionResponse.headers.get("set-cookie")?.split(";")[0] ?? "";
+  assert(adminSessionResponse.status === 200, `Expected admin session 200, received ${adminSessionResponse.status}.`);
+  assert(adminCookie.startsWith("ij_admin_session="), "Admin session cookie was not issued.");
+  const adminGiftResponse = await giftRoute.GET(
+    jsonRequest("http://test.local/api/gift", "GET", undefined, undefined, adminCookie),
+  );
+  assert(adminGiftResponse.status === 200, "Admin session could not access the protected wedding APIs.");
 
   const requestResponse = await invitationRequestRoute.POST(
     jsonRequest("http://test.local/api/invitations/request", "POST", {
@@ -148,7 +165,7 @@ try {
   );
   assert(revokedAccess.status === 401, `Expected revoked session 401, received ${revokedAccess.status}.`);
 
-  console.log("PASS locked=401 email-request pending admin-queue approval auto-unlock session-cookie rsvp message moderation gift revoke=401");
+  console.log("PASS locked=401 admin-session admin-site-api email-request pending admin-queue approval auto-unlock guest-session rsvp message moderation gift revoke=401");
 } finally {
   const removals: Promise<void>[] = [];
   if (requestId) removals.push(del(`wedding/invitation-requests/${requestId}.json`));

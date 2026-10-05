@@ -390,6 +390,8 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .admin-key-row { display: flex; gap: .7rem; margin-top: .7rem; }.admin-key-row input { border-radius: 0; min-height: 2.9rem; }
 .admin-login > p { margin-bottom: 0; color: var(--muted-foreground); font-size: .8rem; }
 .admin-list { max-width: 70rem; margin: auto; display: grid; gap: 1rem; }
+.admin-site-access { max-width: 70rem; margin: 0 auto 4rem; display: flex; justify-content: space-between; align-items: center; gap: 2rem; padding: 1.5rem 1.7rem; border: 1px solid rgba(56,125,109,.5); background: linear-gradient(115deg, rgba(0,107,128,.18), rgba(116,36,61,.08)); }
+.admin-site-access > div { display: flex; align-items: center; gap: 1.2rem; }.admin-site-access > div > svg { width: 2rem; height: 2rem; color: #8dc7b3; }.admin-site-access h2 { margin: .2rem 0; font: 400 clamp(1.35rem, 2.5vw, 2rem) Georgia, serif; }.admin-site-access p { margin: 0; color: var(--muted-foreground); font-size: .75rem; }
 .admin-request-list { max-width: 70rem; margin: 0 auto 5rem; display: grid; gap: 1rem; }
 .admin-title-row { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
 .admin-title-row > div > p:last-child { margin: .45rem 0 0; color: var(--muted-foreground); }
@@ -474,7 +476,7 @@ fieldset { border: 0; padding: 0; margin: 0; }
   .gift-details dl > div { grid-template-columns: 1fr; gap: .25rem; }.gift-message { min-height: 24rem; }
   .terminal-output { padding: 1.2rem; min-height: 19rem; }.terminal-input-row { padding-inline: 1.2rem; }.terminal-hints { padding-inline: 1.2rem; }
   .footer-code { flex-direction: column; gap: .35rem; }
-  .admin-header, .admin-message, .admin-invite, .admin-title-row { align-items: flex-start; flex-direction: column; }.admin-key-row, .admin-actions { width: 100%; flex-direction: column; }.admin-key-row button, .admin-actions button { width: 100%; }
+  .admin-header, .admin-message, .admin-invite, .admin-title-row, .admin-site-access { align-items: flex-start; flex-direction: column; }.admin-key-row, .admin-actions { width: 100%; flex-direction: column; }.admin-key-row button, .admin-actions button, .admin-site-access > a { width: 100%; }
   .admin-request { grid-template-columns: 1fr; }.admin-request-review { width: 100%; grid-template-columns: 1fr; }.admin-request-review label, .admin-request-review input, .admin-request-review button { grid-column: 1; grid-row: auto; }.admin-request-result { justify-self: stretch; }
   .admin-manual-tools > summary { flex-direction: column; }
 }

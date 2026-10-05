@@ -109,15 +109,16 @@ export default function ModerationPage() {
   async function loadConsole() {
     setLoading(true);
     try {
-      const [messageResponse, invitationResponse, requestResponse] = await Promise.all([
+      const [messageResponse, invitationResponse, requestResponse, sessionResponse] = await Promise.all([
         fetch("/api/admin/messages", { headers: authHeaders() }),
         fetch("/api/admin/invitations", { headers: authHeaders() }),
         fetch("/api/admin/invitation-requests", { headers: authHeaders() }),
+        fetch("/api/admin/session", { method: "POST", headers: authHeaders() }),
       ]);
       const messageData = (await messageResponse.json()) as { messages?: Message[]; error?: string };
       const invitationData = (await invitationResponse.json()) as { invitations?: Invitation[]; error?: string };
       const requestData = (await requestResponse.json()) as { requests?: InvitationRequest[]; error?: string };
-      if (!messageResponse.ok || !invitationResponse.ok || !requestResponse.ok) {
+      if (!messageResponse.ok || !invitationResponse.ok || !requestResponse.ok || !sessionResponse.ok) {
         setUnlocked(false);
         setStatus(requestData.error ?? messageData.error ?? invitationData.error ?? "Could not unlock the console.");
         return;
@@ -219,7 +220,7 @@ export default function ModerationPage() {
     <main className="admin-page">
       <header className="admin-header">
         <div><p className="eyebrow">COUPLE-ONLY CONTROL ROOM</p><h1>Wedding administration</h1></div>
-        <Link href="/">View guest entrance</Link>
+        <Link href="/">View wedding site</Link>
       </header>
 
       <section className="admin-login" aria-label="Admin access">
@@ -234,6 +235,10 @@ export default function ModerationPage() {
 
       {unlocked && (
         <>
+          <section className="admin-site-access">
+            <div><ShieldCheck /><div><p className="mono-note">ADMIN SESSION ACTIVE</p><h2>You can now view the complete wedding website.</h2><p>Your secure admin access remains active in this browser for seven days.</p></div></div>
+            <Button asChild><Link href="/">Open full wedding site</Link></Button>
+          </section>
           <section className="admin-request-list" aria-label="Invitation requests">
             <div className="admin-section-title admin-title-row">
               <div><p className="mono-note">EMAIL APPROVAL QUEUE</p><h2>{pendingCount ? `${pendingCount} waiting for you` : "No requests waiting"}</h2><p>Guests remain on their private waiting card until you approve them here.</p></div>

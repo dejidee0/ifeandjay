@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getInvitationByCode } from "@/lib/wedding-store";
+import { adminFromRequest } from "@/lib/admin-session";
 
 export const INVITATION_COOKIE = "ij_private_invitation";
 export const INVITATION_MAX_AGE = 60 * 60 * 24 * 60;
@@ -72,5 +73,8 @@ function cookieValue(request: Request, name: string) {
 }
 
 export function invitationFromRequest(request: Request) {
+  if (adminFromRequest(request)) {
+    return Promise.resolve({ code: "ADMIN", guestName: "Ifedayo & Joyce · Admin", maxGuests: 6 });
+  }
   return resolveInvitationToken(cookieValue(request, INVITATION_COOKIE));
 }

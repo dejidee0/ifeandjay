@@ -288,6 +288,32 @@ export default function WeddingExperience({ invitation }: { invitation: Invitati
     }
   }
 
+  function downloadInvitation() {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#090909"/><stop offset=".56" stop-color="#151112"/><stop offset="1" stop-color="#071b20"/></linearGradient>
+        <pattern id="weave" width="96" height="96" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 48H96M48 0V96" stroke="#c09158" stroke-opacity=".13" stroke-width="2"/><rect x="25" y="25" width="46" height="46" fill="none" stroke="#006b80" stroke-opacity=".22" stroke-width="2"/></pattern>
+      </defs>
+      <rect width="1200" height="1500" fill="url(#bg)"/><rect width="1200" height="1500" fill="url(#weave)"/><rect x="56" y="56" width="1088" height="1388" fill="none" stroke="#c09158" stroke-opacity=".7"/><rect x="76" y="76" width="1048" height="1348" fill="none" stroke="#f2e7d7" stroke-opacity=".16"/>
+      <circle cx="600" cy="312" r="108" fill="#0d0d0d" stroke="#c09158"/><circle cx="600" cy="312" r="91" fill="none" stroke="#74243d" stroke-width="3"/>
+      <text x="600" y="336" fill="#f2e7d7" font-size="68" text-anchor="middle" font-family="Georgia,serif">I <tspan fill="#c09158">&amp;</tspan> J</text>
+      <text x="600" y="530" fill="#c09158" font-size="22" text-anchor="middle" letter-spacing="10" font-family="monospace">THE ADEDEJI + AKORA UNION</text>
+      <text x="600" y="720" fill="#f2e7d7" font-size="132" text-anchor="middle" font-family="Georgia,serif">IFEDAYO</text>
+      <text x="600" y="835" fill="#c09158" font-size="92" text-anchor="middle" font-style="italic" font-family="Georgia,serif">&amp;</text>
+      <text x="600" y="980" fill="#f2e7d7" font-size="132" text-anchor="middle" font-family="Georgia,serif">JOYCE</text>
+      <line x1="360" y1="1080" x2="840" y2="1080" stroke="#c09158"/>
+      <text x="600" y="1160" fill="#f2e7d7" font-size="27" text-anchor="middle" letter-spacing="9" font-family="monospace">TRADITIONAL WEDDING</text>
+      <text x="600" y="1240" fill="#f2e7d7" fill-opacity=".72" font-size="25" text-anchor="middle" letter-spacing="8" font-family="monospace">NOVEMBER 2026</text>
+      <text x="600" y="1370" fill="#c09158" font-size="18" text-anchor="middle" letter-spacing="7" font-family="monospace">STRICTLY BY INVITATION</text>
+    </svg>`;
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "Ifedayo-and-Joyce-Invitation.svg";
+    anchor.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   async function copyGiftDetails() {
     if (!giftDetails) return;
     const text = `${giftDetails.bank}\n${giftDetails.accountName}\n${giftDetails.accountNumber}`;
@@ -297,7 +323,10 @@ export default function WeddingExperience({ invitation }: { invitation: Invitati
   }
 
   async function lockInvitation() {
-    await fetch("/api/invitations/verify", { method: "DELETE" }).catch(() => undefined);
+    await Promise.all([
+      fetch("/api/invitations/verify", { method: "DELETE" }).catch(() => undefined),
+      fetch("/api/admin/session", { method: "DELETE" }).catch(() => undefined),
+    ]);
     window.location.replace("/");
   }
 
@@ -316,9 +345,13 @@ export default function WeddingExperience({ invitation }: { invitation: Invitati
       </header>
 
       <section className="hero" id="top">
-        <Image className="hero-image" src="/couple-hero.png" alt="Ifedayo and Joyce in jewel-teal traditional attire against a black studio backdrop" fill priority sizes="100vw" />
-        <div className="hero-shade" />
+        <div className="hero-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <div className="hero-grid" aria-hidden="true" />
+        <div className="hero-emblem" aria-hidden="true">
+          <div className="hero-emblem-orbit"><span>EST.</span><span>2026</span></div>
+          <div className="hero-emblem-core"><span>I</span><i>&</i><span>J</span></div>
+          <p>ADEDEJI <b>+</b> AKORA</p>
+        </div>
         <div className="hero-content">
           <div className="verified-guest-pass">
             <div><span>PRIVATE INVITATION FOR</span><strong>{invitation.guestName}</strong></div>
@@ -353,10 +386,13 @@ export default function WeddingExperience({ invitation }: { invitation: Invitati
               </article>
             ))}
           </div>
-          <figure className="story-image" data-reveal>
-            <Image src="/couple-story-natural.png" alt="Ifedayo and Joyce sharing an affectionate look in jewel-teal traditional attire against black" fill sizes="(max-width: 900px) 100vw, 42vw" />
-            <figcaption><code>merge: two lives → one future</code><span>Built with grace. Rooted in love.</span></figcaption>
-          </figure>
+          <aside className="story-editorial" data-reveal aria-label="Two lives, one future">
+            <div className="story-pattern" aria-hidden="true" />
+            <p className="story-edition">VOLUME I <span>/</span> NOVEMBER 2026</p>
+            <div className="story-monogram"><span>I</span><i>&</i><span>J</span></div>
+            <blockquote>Built with grace.<br />Rooted in love.</blockquote>
+            <footer><code>merge: two lives -&gt; one future</code><span>THE ADEDEJI + AKORA UNION</span></footer>
+          </aside>
         </div>
       </section>
 
@@ -471,10 +507,19 @@ export default function WeddingExperience({ invitation }: { invitation: Invitati
       <section className="invitation section" id="invitation">
         <SectionHeading index="08" eyebrow="DIGITAL INVITATION / SHARE THE DATE" title="Carry the invitation with you." />
         <div className="invite-shell" data-reveal>
-          <div className="invite-image"><Image src="/og-v3.png" alt="Ifedayo and Joyce traditional wedding invitation card in teal, wine and gold" fill sizes="(max-width: 900px) 100vw, 68vw" /></div>
+          <article className="digital-invitation-card" aria-label="Ifedayo and Joyce digital wedding invitation">
+            <div className="digital-card-pattern" aria-hidden="true" />
+            <p>THE ADEDEJI + AKORA UNION</p>
+            <div className="digital-card-monogram"><span>I</span><i>&</i><span>J</span></div>
+            <h3><span>IFEDAYO</span><i>&</i><span>JOYCE</span></h3>
+            <div className="digital-card-rule"><span /></div>
+            <p className="digital-card-event">TRADITIONAL WEDDING</p>
+            <p className="digital-card-date">NOVEMBER 2026 <span>·</span> EXACT DATE TO FOLLOW</p>
+            <footer>STRICTLY BY INVITATION</footer>
+          </article>
           <div className="invite-actions">
             <Button size="lg" onClick={shareInvitation}><Share2 /> Share invitation</Button>
-            <Button size="lg" variant="outline" asChild><a href="/og-v3.png" download="Ifedayo-and-Joyce-Invitation.png"><Download /> Download card</a></Button>
+            <Button size="lg" variant="outline" onClick={downloadInvitation}><Download /> Download card</Button>
           </div>
         </div>
       </section>

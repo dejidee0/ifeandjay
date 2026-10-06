@@ -15,20 +15,13 @@ export const metadata: Metadata = {
     title: "Ifedayo & Joyce · Traditional Wedding",
     description: "Connection established. Join us in November 2026.",
     type: "website",
-    images: [
-      {
-        url: "/og-v3.png",
-        width: 1792,
-        height: 939,
-        alt: "Ifedayo and Joyce traditional wedding invitation",
-      },
-    ],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Ifedayo and Joyce traditional wedding" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ifedayo & Joyce · Traditional Wedding",
     description: "Connection established. Join us in November 2026.",
-    images: ["/og-v3.png"],
+    images: ["/opengraph-image"],
   },
   icons: {
     icon: "/favicon.svg",
